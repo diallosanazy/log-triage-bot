@@ -1,5 +1,9 @@
 # Log Triage Bot
 
+![Triage report preview](docs/screenshot.svg)
+
+[![CI](https://github.com/diallosanazy/log-triage-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/diallosanazy/log-triage-bot/actions/workflows/ci.yml)
+
 A small **Python + PowerShell** automation that scans Windows Event Logs and
 Linux syslog/auth.log for suspicious patterns, scores them, and emits a daily
 incident-detection summary.

@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run tests
+        run: pytest -q tests/
+
+      - name: End-to-end run on sample logs
+        run: |
+          python triage_bot.py \
+            --auth sample_logs/auth.log \
+            --syslog sample_logs/syslog \
+            --windows sample_logs/windows_events.json \
+            --out reports/ci.md
+          test -s reports/ci.md
+          grep -q "High-priority findings" reports/ci.md
+          echo "report generated:" && wc -l reports/ci.md
