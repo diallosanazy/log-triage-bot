@@ -1,0 +1,10 @@
+Apr 25 07:03:03 srv01 systemd[1]: Started session-0.scope
+Apr 25 06:56:03 srv01 systemd[1]: Started session-1.scope
+Apr 25 06:49:03 srv01 systemd[1]: Started session-2.scope
+Apr 25 06:42:03 srv01 systemd[1]: Started session-3.scope
+Apr 25 06:35:03 srv01 systemd[1]: Started session-4.scope
+Apr 25 06:28:03 srv01 systemd[1]: Started session-5.scope
+Apr 25 06:21:03 srv01 systemd[1]: Started session-6.scope
+Apr 25 06:14:03 srv01 systemd[1]: Started session-7.scope
+Apr 25 06:07:03 srv01 systemd[1]: Started session-8.scope
+Apr 25 06:00:03 srv01 systemd[1]: Started session-9.scope
