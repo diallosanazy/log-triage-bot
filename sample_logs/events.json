@@ -1,0 +1,13 @@
+{"ts":"2026-04-25T06:33:55+00:00","level":"ERROR","endpoint":"/api/checkout","user_id":"u_3331","exception":"TimeoutError","response_ms":5012,"message":"payment provider timeout"}
+{"ts":"2026-04-25T06:34:10+00:00","level":"ERROR","endpoint":"/api/checkout","user_id":"u_4408","exception":"TimeoutError","response_ms":5009,"message":"payment provider timeout"}
+{"ts":"2026-04-25T06:34:31+00:00","level":"ERROR","endpoint":"/api/checkout","user_id":"u_5519","exception":"TimeoutError","response_ms":5021,"message":"payment provider timeout"}
+{"ts":"2026-04-25T06:40:08+00:00","level":"ERROR","endpoint":"/api/search","user_id":"u_1042","exception":"DatabaseError","response_ms":2410,"message":"connection pool exhausted"}
+{"ts":"2026-04-25T06:40:31+00:00","level":"ERROR","endpoint":"/api/search","user_id":"u_3331","exception":"DatabaseError","response_ms":2380,"message":"connection pool exhausted"}
+{"ts":"2026-04-25T06:40:58+00:00","level":"ERROR","endpoint":"/api/search","user_id":"u_6670","exception":"DatabaseError","response_ms":2420,"message":"connection pool exhausted"}
+{"ts":"2026-04-25T06:41:14+00:00","level":"ERROR","endpoint":"/api/profile","user_id":"u_4408","exception":"DatabaseError","response_ms":2105,"message":"connection pool exhausted"}
+{"ts":"2026-04-25T06:44:12+00:00","level":"ERROR","endpoint":"/api/upload","user_id":"u_1042","exception":"RateLimitExceeded","response_ms":8,"message":"100 requests/minute"}
+{"ts":"2026-04-25T06:45:08+00:00","level":"ERROR","endpoint":"/api/upload","user_id":"u_4408","exception":"ValidationError","response_ms":12,"message":"unsupported mime type"}
+{"ts":"2026-04-25T06:47:00+00:00","level":"ERROR","endpoint":"/api/profile","user_id":"u_6670","exception":"ValidationError","response_ms":88,"message":"missing required field email"}
+{"ts":"2026-04-25T06:48:10+00:00","level":"ERROR","endpoint":"/api/messages","user_id":"u_3331","exception":"PermissionDenied","response_ms":22,"message":"thread is private"}
+{"ts":"2026-04-25T06:51:00+00:00","level":"ERROR","endpoint":"/api/messages","user_id":"u_5519","exception":"NullReferenceException","response_ms":320,"message":"thread.author is None"}
+{"ts":"2026-04-25T06:55:03+00:00","level":"ERROR","endpoint":"/api/profile","user_id":"u_3331","exception":"DatabaseError","response_ms":1850,"message":"timeout connecting to db"}

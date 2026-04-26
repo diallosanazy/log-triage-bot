@@ -1,48 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 600" font-family="ui-monospace,Menlo,Consolas,monospace">
-  <rect width="980" height="600" fill="#0b1020"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 620" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#0a0f1c"/>
+    </linearGradient>
+  </defs>
+  <rect width="980" height="620" fill="url(#bg)"/>
 
-  <!-- terminal chrome -->
-  <rect x="0" y="0" width="980" height="32" fill="#1a1f3a"/>
-  <circle cx="20" cy="16" r="6" fill="#ef4444"/>
-  <circle cx="40" cy="16" r="6" fill="#eab308"/>
-  <circle cx="60" cy="16" r="6" fill="#22c55e"/>
-  <text x="490" y="20" font-size="12" fill="#94a3b8" text-anchor="middle">log-triage-bot — bash</text>
+  <!-- Terminal-style window chrome -->
+  <rect x="20" y="20" width="940" height="580" rx="10" fill="#0f172a" stroke="#1f2937"/>
+  <circle cx="44"  cy="44" r="6" fill="#ef4444"/>
+  <circle cx="64"  cy="44" r="6" fill="#eab308"/>
+  <circle cx="84"  cy="44" r="6" fill="#22c55e"/>
+  <text x="490" y="48" font-size="12" fill="#94a3b8" text-anchor="middle">reports/today.md — App Log Analyzer</text>
+  <line x1="20" y1="68" x2="960" y2="68" stroke="#1f2937"/>
 
-  <!-- content -->
-  <g font-size="13">
-    <text x="20" y="60"  fill="#86efac">$ python triage_bot.py --auth sample_logs/auth.log \</text>
-    <text x="20" y="78"  fill="#cbd5e1">    --syslog sample_logs/syslog --windows sample_logs/windows_events.json \</text>
-    <text x="20" y="96"  fill="#cbd5e1">    --out reports/today.md</text>
+  <!-- Heading -->
+  <text x="40" y="100" font-size="18" font-weight="700" fill="#e2e8f0">App Log Report - 2026-04-25</text>
 
-    <text x="20" y="124" fill="#e2e8f0">Wrote reports/today.md (32 events, 5 findings)</text>
-    <text x="20" y="142" fill="#fca5a5">  WARNING: 4 HIGH-severity finding(s) - review now</text>
+  <!-- Summary panel -->
+  <rect x="40" y="120" width="900" height="80" rx="8" fill="#111827" stroke="#1f2937"/>
+  <text x="56" y="144" font-size="12" fill="#94a3b8" letter-spacing="0.7">SUMMARY</text>
+  <g font-size="13" fill="#cbd5e1">
+    <text x="56"  y="178">Events processed: <tspan fill="#e2e8f0" font-weight="700">1,284</tspan></text>
+    <text x="296" y="178">High: <tspan fill="#fca5a5" font-weight="700">3</tspan></text>
+    <text x="396" y="178">Medium: <tspan fill="#fcd34d" font-weight="700">4</tspan></text>
+    <text x="516" y="178">Low: <tspan fill="#86efac" font-weight="700">7</tspan></text>
+  </g>
 
-    <text x="20" y="174" fill="#86efac">$ head -40 reports/today.md</text>
+  <!-- High-priority findings -->
+  <text x="40"  y="232" font-size="14" font-weight="700" fill="#e2e8f0">High-priority findings</text>
 
-    <text x="20" y="202" fill="#e2e8f0" font-weight="700"># Log Triage Report - 2026-04-25</text>
+  <!-- Finding 1 -->
+  <rect x="40" y="246" width="900" height="80" rx="8" fill="#111827" stroke="#7f1d1d"/>
+  <rect x="56" y="262" width="58" height="22" rx="11" fill="#7f1d1d"/>
+  <text x="85" y="278" font-size="11" fill="#fecaca" text-anchor="middle" font-weight="700">HIGH 90</text>
+  <text x="128" y="278" font-size="13" fill="#e2e8f0" font-weight="700">regression_after_deploy</text>
+  <text x="56"  y="300" font-size="12" fill="#cbd5e1">When: 2026-04-25T06:40:00+00:00</text>
+  <text x="56"  y="318" font-size="12" fill="#cbd5e1">What: 6 errors within 0:15:00 of deploy 4f7c1d2 (mostly /api/search)</text>
 
-    <text x="20" y="230" fill="#e2e8f0" font-weight="700">## Summary</text>
-    <text x="20" y="250" fill="#cbd5e1">- Events processed: <tspan font-weight="700" fill="#fff">32</tspan></text>
-    <text x="20" y="268" fill="#cbd5e1">- High findings:    <tspan font-weight="700" fill="#fca5a5">4</tspan></text>
-    <text x="20" y="286" fill="#cbd5e1">- Medium findings:  <tspan font-weight="700" fill="#fde68a">1</tspan></text>
-    <text x="20" y="304" fill="#cbd5e1">- Low findings:     <tspan font-weight="700" fill="#86efac">0</tspan></text>
+  <!-- Finding 2 -->
+  <rect x="40" y="338" width="900" height="80" rx="8" fill="#111827" stroke="#7f1d1d"/>
+  <rect x="56" y="354" width="58" height="22" rx="11" fill="#7f1d1d"/>
+  <text x="85" y="370" font-size="11" fill="#fecaca" text-anchor="middle" font-weight="700">HIGH 80</text>
+  <text x="128" y="370" font-size="13" fill="#e2e8f0" font-weight="700">error_burst</text>
+  <text x="56"  y="392" font-size="12" fill="#cbd5e1">When: 2026-04-25T06:33:55+00:00</text>
+  <text x="56"  y="410" font-size="12" fill="#cbd5e1">What: 6+ errors on /api/checkout in 0:05:00 (TimeoutError, payment provider)</text>
 
-    <text x="20" y="334" fill="#e2e8f0" font-weight="700">## High-priority findings</text>
+  <!-- Finding 3 -->
+  <rect x="40" y="430" width="900" height="80" rx="8" fill="#111827" stroke="#7f1d1d"/>
+  <rect x="56" y="446" width="58" height="22" rx="11" fill="#7f1d1d"/>
+  <text x="85" y="462" font-size="11" fill="#fecaca" text-anchor="middle" font-weight="700">HIGH 75</text>
+  <text x="128" y="462" font-size="13" fill="#e2e8f0" font-weight="700">exception_spike</text>
+  <text x="56"  y="484" font-size="12" fill="#cbd5e1">When: 2026-04-25T06:33:55+00:00</text>
+  <text x="56"  y="502" font-size="12" fill="#cbd5e1">What: TimeoutError raised 12 times across /api/checkout</text>
 
-    <text x="20" y="362" fill="#fca5a5">### [High - 90] successful_after_failures</text>
-    <text x="20" y="380" fill="#cbd5e1">- When: 2026-04-25T06:55:03+00:00</text>
-    <text x="20" y="398" fill="#cbd5e1">- What: Successful login as root from 203.0.113.45 after 15 failures</text>
-
-    <text x="20" y="426" fill="#fca5a5">### [High - 85] suspicious_powershell</text>
-    <text x="20" y="444" fill="#cbd5e1">- What: Suspicious PowerShell on WIN-FIN01 by alice</text>
-    <text x="20" y="462" fill="#94a3b8">  evidence: -EncodedCommand SQBFAFgA... IEX (New-Object Net.WebClient)</text>
-
-    <text x="20" y="490" fill="#fca5a5">### [High - 80] failed_login_burst</text>
-    <text x="20" y="508" fill="#cbd5e1">- What: 10+ failed logins from 203.0.113.45 in 0:05:00</text>
-
-    <text x="20" y="536" fill="#fca5a5">### [High - 75] unusual_process_spawn</text>
-    <text x="20" y="554" fill="#cbd5e1">- What: winword.exe spawned powershell.exe on WIN-FIN01 (likely macro)</text>
-
-    <text x="20" y="582" fill="#86efac">$ <tspan fill="#cbd5e1">_</tspan></text>
+  <!-- Stats -->
+  <text x="40" y="540" font-size="14" font-weight="700" fill="#e2e8f0">Stats</text>
+  <g font-size="12" fill="#cbd5e1">
+    <text x="40"  y="566">Top endpoints:</text>
+    <text x="160" y="566" fill="#94a3b8">/api/checkout (28)  /api/search (22)  /api/upload (18)  /api/profile (14)</text>
+    <text x="40"  y="586">Top exceptions:</text>
+    <text x="160" y="586" fill="#94a3b8">TimeoutError (12)   DatabaseError (9)   ValidationError (4)</text>
   </g>
 </svg>

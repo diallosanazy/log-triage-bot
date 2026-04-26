@@ -1,0 +1,31 @@
+2026-04-25 06:30:01 INFO  [core.startup] - DEPLOY a1b9f0c starting up worker pool size=8
+2026-04-25 06:30:02 INFO  [core.startup] - boot complete in 1.2s
+2026-04-25 06:31:14 INFO  [users.views] /api/login user=u_1042 - login ok
+2026-04-25 06:32:08 INFO  [orders.views] /api/checkout user=u_3331 - cart=3 items
+2026-04-25 06:33:21 WARNING [orders.views] /api/checkout user=u_3331 - retrying payment provider
+2026-04-25 06:33:55 ERROR [orders.views] /api/checkout user=u_3331 - TimeoutError: payment provider did not respond in 5000ms
+2026-04-25 06:34:10 ERROR [orders.views] /api/checkout user=u_4408 - TimeoutError: payment provider did not respond in 5000ms
+2026-04-25 06:34:31 ERROR [orders.views] /api/checkout user=u_5519 - TimeoutError: payment provider did not respond in 5000ms
+2026-04-25 06:35:02 ERROR [orders.views] /api/checkout user=u_3331 - TimeoutError: payment provider did not respond in 5000ms
+2026-04-25 06:35:48 ERROR [orders.views] /api/checkout user=u_6670 - TimeoutError: payment provider did not respond in 5000ms
+2026-04-25 06:36:19 ERROR [orders.views] /api/checkout user=u_1042 - TimeoutError: payment provider did not respond in 5000ms
+2026-04-25 06:38:02 INFO  [search.views] /api/search user=u_1042 - q="shoes"
+2026-04-25 06:38:14 INFO  [users.views] /api/profile user=u_3331 - profile fetched
+2026-04-25 06:40:00 INFO  [core.startup] - DEPLOY 4f7c1d2 starting up worker pool size=8
+2026-04-25 06:40:08 ERROR [search.views] /api/search user=u_1042 - DatabaseError: connection pool exhausted
+2026-04-25 06:40:31 ERROR [search.views] /api/search user=u_3331 - DatabaseError: connection pool exhausted
+2026-04-25 06:40:58 ERROR [search.views] /api/search user=u_6670 - DatabaseError: connection pool exhausted
+2026-04-25 06:41:14 ERROR [users.views] /api/profile user=u_4408 - DatabaseError: connection pool exhausted
+2026-04-25 06:41:42 ERROR [search.views] /api/search user=u_4408 - DatabaseError: connection pool exhausted
+2026-04-25 06:42:09 ERROR [search.views] /api/search user=u_5519 - DatabaseError: connection pool exhausted
+2026-04-25 06:43:50 INFO  [uploads.views] /api/upload user=u_1042 - upload start size=2.4MB
+2026-04-25 06:44:12 ERROR [uploads.views] /api/upload user=u_1042 - RateLimitExceeded: 100 requests/minute
+2026-04-25 06:44:33 WARNING [uploads.views] /api/upload user=u_3331 - large upload size=18MB
+2026-04-25 06:45:08 ERROR [uploads.views] /api/upload user=u_4408 - ValidationError: unsupported mime type 'application/x-msdownload'
+2026-04-25 06:46:21 INFO  [users.views] /api/profile user=u_6670 - profile fetched
+2026-04-25 06:47:00 ERROR [users.views] /api/profile user=u_6670 - ValidationError: missing required field 'email'
+2026-04-25 06:48:10 ERROR [messages.views] /api/messages user=u_3331 - PermissionDenied: thread is private
+2026-04-25 06:50:05 INFO  [search.views] /api/search user=u_3331 - q="laptop bag"
+2026-04-25 06:51:00 ERROR [messages.views] /api/messages user=u_5519 - NullReferenceException: thread.author is None
+2026-04-25 06:52:00 INFO  [orders.views] /api/checkout user=u_4408 - cart=1 items
+2026-04-25 06:55:03 ERROR [users.views] /api/profile user=u_3331 - DatabaseError: timeout connecting to db

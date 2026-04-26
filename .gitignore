@@ -1,5 +1,24 @@
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
 .venv/
-.env
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Generated reports
+reports/
+!reports/.gitkeep
+
+# Editor / OS noise
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db
+
+# Local configs
+.env
+.env.local

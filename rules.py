@@ -1,160 +1,177 @@
-"""Detection rules + scoring for the triage bot.
+"""Detection rules for the app log analyzer.
 
-Each rule takes the full list of events and yields findings. A finding is:
+Each rule receives the full list of normalized events plus a list of deploy
+timestamps and yields finding dicts with these keys:
 
-    {
-        "rule":     str,
-        "score":    int,           # 0-100
-        "severity": "Low" | "Medium" | "High",
-        "ts":       datetime,
-        "summary":  str,
-        "evidence": list[str],     # raw lines
-    }
+    rule         short rule name
+    severity     "High" | "Medium" | "Low"
+    score        0-100 numeric score
+    when         ISO 8601 timestamp of the matched event(s)
+    what         human-readable description
+    evidence     small snippet that triggered the rule
 """
 from __future__ import annotations
 
-import re
-from collections import defaultdict, deque
-from datetime import timedelta
+from collections import Counter, defaultdict
+from datetime import datetime, timedelta
 from typing import Iterable
 
+# Tunable thresholds
+ERROR_BURST_COUNT = 5
+ERROR_BURST_WINDOW = timedelta(minutes=5)
+EXCEPTION_SPIKE_COUNT = 5
+SLOW_ENDPOINT_MS = 2000
+SLOW_ENDPOINT_MIN_HITS = 5
+DEPLOY_REGRESSION_WINDOW = timedelta(minutes=15)
+DEPLOY_REGRESSION_MIN_ERRORS = 5
 
-def _severity(score: int) -> str:
-    if score >= 70:
-        return "High"
-    if score >= 40:
-        return "Medium"
+SEVERITY_THRESHOLDS = [(70, "High"), (40, "Medium"), (0, "Low")]
+
+
+def _severity_for(score: int) -> str:
+    for threshold, label in SEVERITY_THRESHOLDS:
+        if score >= threshold:
+            return label
     return "Low"
 
 
-def _finding(rule: str, score: int, ts, summary: str, evidence: list[str]) -> dict:
-    return {
-        "rule": rule,
-        "score": score,
-        "severity": _severity(score),
-        "ts": ts,
-        "summary": summary,
-        "evidence": evidence,
-    }
+def _parse_ts(s: str) -> datetime | None:
+    if not s:
+        return None
+    try:
+        # Be permissive about Z vs +00:00.
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except ValueError:
+        return None
 
 
-def failed_login_burst(events, window: timedelta = timedelta(minutes=5),
-                       threshold: int = 10) -> Iterable[dict]:
-    """>= `threshold` failed logins from the same source IP within `window`."""
-    by_ip: dict[str, deque] = defaultdict(deque)
-    for ev in sorted(events, key=lambda e: e["ts"]):
-        if ev["event_id"] != 4625 or not ev.get("src_ip"):
+# ---------- rules ----------
+
+def rule_error_burst(events: list[dict]) -> Iterable[dict]:
+    by_endpoint: dict[str, list[dict]] = defaultdict(list)
+    for e in events:
+        if e["level"] == "ERROR" and e["endpoint"]:
+            by_endpoint[e["endpoint"]].append(e)
+    for endpoint, errs in by_endpoint.items():
+        errs.sort(key=lambda x: x["ts"])
+        for i, e in enumerate(errs):
+            ts = _parse_ts(e["ts"])
+            if not ts:
+                continue
+            window_end = ts + ERROR_BURST_WINDOW
+            count = sum(
+                1 for x in errs[i:]
+                if (xts := _parse_ts(x["ts"])) and xts <= window_end
+            )
+            if count >= ERROR_BURST_COUNT:
+                score = 80
+                yield {
+                    "rule": "error_burst",
+                    "severity": _severity_for(score),
+                    "score": score,
+                    "when": e["ts"],
+                    "what": f"{count}+ errors on {endpoint} in {ERROR_BURST_WINDOW}",
+                    "evidence": e["raw"][:200],
+                }
+                break  # one finding per endpoint
+
+
+def rule_exception_spike(events: list[dict]) -> Iterable[dict]:
+    counts = Counter(e["exception"] for e in events if e["exception"])
+    for exc, n in counts.items():
+        if n >= EXCEPTION_SPIKE_COUNT:
+            score = 75 if n >= 10 else 60
+            sample = next(e for e in events if e["exception"] == exc)
+            yield {
+                "rule": "exception_spike",
+                "severity": _severity_for(score),
+                "score": score,
+                "when": sample["ts"],
+                "what": f"{exc} raised {n} times",
+                "evidence": sample["raw"][:200],
+            }
+
+
+def rule_slow_endpoint(events: list[dict]) -> Iterable[dict]:
+    bucket: dict[str, list[int]] = defaultdict(list)
+    for e in events:
+        if e["endpoint"] and e["response_ms"] is not None:
+            bucket[e["endpoint"]].append(int(e["response_ms"]))
+    for endpoint, rts in bucket.items():
+        if len(rts) < SLOW_ENDPOINT_MIN_HITS:
             continue
-        ip = ev["src_ip"]
-        q = by_ip[ip]
-        q.append(ev)
-        while q and ev["ts"] - q[0]["ts"] > window:
-            q.popleft()
-        if len(q) == threshold:
-            yield _finding(
-                "failed_login_burst",
-                score=80,
-                ts=ev["ts"],
-                summary=f"{threshold}+ failed logins from {ip} in {window}",
-                evidence=[e["raw"] for e in list(q)[:5]],
-            )
+        avg = sum(rts) / len(rts)
+        if avg > SLOW_ENDPOINT_MS:
+            score = 70 if avg > SLOW_ENDPOINT_MS * 2 else 55
+            sample = next(e for e in events if e["endpoint"] == endpoint and e["response_ms"] is not None)
+            yield {
+                "rule": "slow_endpoint",
+                "severity": _severity_for(score),
+                "score": score,
+                "when": sample["ts"],
+                "what": f"{endpoint} avg {avg:.0f} ms over {len(rts)} hits",
+                "evidence": sample["raw"][:200],
+            }
 
 
-def successful_after_failures(events, window: timedelta = timedelta(minutes=10),
-                              fail_threshold: int = 5) -> Iterable[dict]:
-    """A successful login from an IP that just failed `fail_threshold`+ times."""
-    fails: dict[str, list] = defaultdict(list)
-    for ev in sorted(events, key=lambda e: e["ts"]):
-        ip = ev.get("src_ip")
-        if not ip:
-            continue
-        # Drop fails outside the window
-        fails[ip] = [t for t in fails[ip] if ev["ts"] - t <= window]
-        if ev["event_id"] == 4625:
-            fails[ip].append(ev["ts"])
-        elif ev["event_id"] == 4624 and len(fails[ip]) >= fail_threshold:
-            yield _finding(
-                "successful_after_failures",
-                score=90,
-                ts=ev["ts"],
-                summary=(
-                    f"Successful login as {ev.get('user')} from {ip} "
-                    f"after {len(fails[ip])} failures"
-                ),
-                evidence=[ev["raw"]],
-            )
-            fails[ip].clear()
+def rule_regression_after_deploy(events: list[dict], deploys: list[datetime]) -> Iterable[dict]:
+    if not deploys:
+        return
+    error_events = [e for e in events if e["level"] == "ERROR"]
+    for d in deploys:
+        end = d + DEPLOY_REGRESSION_WINDOW
+        clustered = [
+            e for e in error_events
+            if (ts := _parse_ts(e["ts"])) and d <= ts <= end
+        ]
+        if len(clustered) >= DEPLOY_REGRESSION_MIN_ERRORS:
+            score = 90
+            yield {
+                "rule": "regression_after_deploy",
+                "severity": _severity_for(score),
+                "score": score,
+                "when": d.isoformat(),
+                "what": f"{len(clustered)} errors within {DEPLOY_REGRESSION_WINDOW} of deploy",
+                "evidence": clustered[0]["raw"][:200],
+            }
 
 
-_SUDOERS = re.compile(r"(NEW USER|sudoers|usermod -aG sudo|net localgroup administrators)", re.I)
+def rule_new_exception_type(events: list[dict], baseline: set[str] | None = None) -> Iterable[dict]:
+    """Flag exception classes that aren't in `baseline`.
+
+    If no baseline is given, treat the FIRST half of events as baseline and
+    look for novel exception types in the SECOND half. This is enough to
+    catch a new error class that started showing up after some change.
+    """
+    if not events:
+        return
+    if baseline is None:
+        mid = len(events) // 2 or 1
+        baseline = {e["exception"] for e in events[:mid] if e["exception"]}
+    for e in events[len(events) // 2:]:
+        exc = e["exception"]
+        if exc and exc not in baseline:
+            score = 65
+            yield {
+                "rule": "new_exception_type",
+                "severity": _severity_for(score),
+                "score": score,
+                "when": e["ts"],
+                "what": f"new exception class observed: {exc}",
+                "evidence": e["raw"][:200],
+            }
+            baseline.add(exc)  # only flag each new class once
 
 
-def privilege_escalation(events) -> Iterable[dict]:
-    for ev in events:
-        msg = (ev.get("message") or "")
-        proc = (ev.get("process") or "").lower()
-        if proc in {"sudo", "su"} or "runas" in msg.lower() or _SUDOERS.search(msg):
-            yield _finding(
-                "privilege_escalation",
-                score=55,
-                ts=ev["ts"],
-                summary=f"Privilege escalation via {proc or 'sudoers/admin change'} "
-                        f"by {ev.get('user') or 'unknown'}",
-                evidence=[ev["raw"]],
-            )
+# ---------- orchestrator ----------
 
-
-_PS_BAD = re.compile(
-    r"(\-EncodedCommand|\-enc\s+|Invoke-Expression|IEX\s|DownloadString|"
-    r"Net\.WebClient|FromBase64String|hidden\s+-NoProfile)",
-    re.I,
-)
-
-
-def suspicious_powershell(events) -> Iterable[dict]:
-    for ev in events:
-        msg = ev.get("message") or ""
-        proc = (ev.get("process") or "").lower()
-        if "powershell" in proc and _PS_BAD.search(msg):
-            yield _finding(
-                "suspicious_powershell",
-                score=85,
-                ts=ev["ts"],
-                summary=f"Suspicious PowerShell on {ev.get('host')} by {ev.get('user')}",
-                evidence=[ev["raw"]],
-            )
-
-
-_OFFICE_PARENTS = {"winword.exe", "excel.exe", "powerpnt.exe", "outlook.exe"}
-_SHELLS = {"cmd.exe", "powershell.exe", "wscript.exe", "cscript.exe", "mshta.exe"}
-
-
-def unusual_process_spawn(events) -> Iterable[dict]:
-    for ev in events:
-        parent = (ev.get("parent") or "").lower()
-        proc = (ev.get("process") or "").lower()
-        if parent in _OFFICE_PARENTS and proc in _SHELLS:
-            yield _finding(
-                "unusual_process_spawn",
-                score=75,
-                ts=ev["ts"],
-                summary=f"{parent} spawned {proc} on {ev.get('host')} (likely macro/phishing)",
-                evidence=[ev["raw"]],
-            )
-
-
-ALL_RULES = [
-    failed_login_burst,
-    successful_after_failures,
-    privilege_escalation,
-    suspicious_powershell,
-    unusual_process_spawn,
-]
-
-
-def run_rules(events: list[dict]) -> list[dict]:
+def run_rules(events: list[dict], deploys: list[datetime] | None = None) -> list[dict]:
+    deploys = deploys or []
     findings: list[dict] = []
-    for rule in ALL_RULES:
-        findings.extend(rule(events))
-    findings.sort(key=lambda f: (-f["score"], f["ts"]))
+    findings.extend(rule_error_burst(events))
+    findings.extend(rule_exception_spike(events))
+    findings.extend(rule_slow_endpoint(events))
+    findings.extend(rule_regression_after_deploy(events, deploys))
+    findings.extend(rule_new_exception_type(events))
+    findings.sort(key=lambda f: -f["score"])
     return findings
